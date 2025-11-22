@@ -12,12 +12,10 @@
   const size = 52;
   let x = window.innerWidth / 2 - size / 2;
   let y = window.innerHeight / 2 - size / 2;
-  let targetX = x;
-  let targetY = y;
-  let dragging = false;
+  let vx = 0, vy = 0; // hız vektörü
 
-  const followSpeed = 12;
-  let lastTime = performance.now();
+  const friction = 0.98; // sürtünme
+  const accel = 0.5;     // sensör hassasiyet
 
   function draw() {
     ctx.fillStyle = "blue"; // arka plan
@@ -27,51 +25,42 @@
     ctx.fillRect(x, y, size, size);
   }
 
-  function update(dt) {
-    const k = Math.min(1, followSpeed * dt);
-    x += (targetX - x) * k;
-    y += (targetY - y) * k;
+  function update() {
+    // hız uygula
+    x += vx;
+    y += vy;
+
+    // sürtünme
+    vx *= friction;
+    vy *= friction;
+
+    // sınırlar
+    if (x < 0) { x = 0; vx = -vx * 0.5; }
+    if (y < 0) { y = 0; vy = -vy * 0.5; }
+    if (x > window.innerWidth - size) { x = window.innerWidth - size; vx = -vx * 0.5; }
+    if (y > window.innerHeight - size) { y = window.innerHeight - size; vy = -vy * 0.5; }
   }
 
-  function loop(t) {
-    const dt = (t - lastTime) / 1000;
-    lastTime = t;
-    update(dt);
+  function loop() {
+    update();
     draw();
     requestAnimationFrame(loop);
   }
 
-  function setTarget(px, py) {
-    targetX = px - size / 2;
-    targetY = py - size / 2;
-  }
-
-  // Dokunma
-  canvas.addEventListener("touchstart", (e) => {
-    dragging = true;
-    setTarget(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-    e.preventDefault();
-  }, { passive: false });
-
-  canvas.addEventListener("touchmove", (e) => {
-    if (!dragging) return;
-    setTarget(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-    e.preventDefault();
-  }, { passive: false });
-
-  canvas.addEventListener("touchend", () => { dragging = false; });
-  canvas.addEventListener("touchcancel", () => { dragging = false; });
-
-  // Mouse
-  canvas.addEventListener("mousedown", (e) => {
-    dragging = true;
-    setTarget(e.clientX, e.clientY);
+  // Telefon sensörleri
+  window.addEventListener("deviceorientation", (e) => {
+    // gamma: sağ-sol eğim, beta: öne-arkaya eğim
+    vx += e.gamma * accel * 0.01;
+    vy += e.beta * accel * 0.01;
   });
+
+  // Mouse test (PC için): kareyi hızla itmek
   canvas.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
-    setTarget(e.clientX, e.clientY);
+    if (e.buttons) {
+      vx += (e.movementX) * 0.2;
+      vy += (e.movementY) * 0.2;
+    }
   });
-  canvas.addEventListener("mouseup", () => { dragging = false; });
 
-  requestAnimationFrame(loop);
+  loop();
 })();
