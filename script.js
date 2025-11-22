@@ -23,7 +23,7 @@
     ctx.fillStyle = "#0d0f14";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "#4da3ff";
+    ctx.fillStyle = "#ff0303";
     ctx.fillRect(x, y, size, size);
 
     if (touching) {
