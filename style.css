@@ -2,7 +2,7 @@
 html, body {
   height: 100%;
   margin: 0;
-  background: #0d0f14;
+  background: #18c202;
   touch-action: none; /* dokunma jestleri (scroll/zoom) kapat */
 }
 #game {
