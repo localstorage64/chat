@@ -1,12 +1,11 @@
-* { box-sizing: border-box; }
 html, body {
-  height: 100%;
   margin: 0;
+  height: 100%;
   background: blue; /* arka plan mavi */
-  touch-action: none;
+  touch-action: none; /* mobilde scroll/zoom kapalı */
 }
 #game {
-  position: fixed;
-  inset: 0;
   display: block;
+  width: 100%;
+  height: 100%;
 }
