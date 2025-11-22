@@ -20,18 +20,11 @@
   let lastTime = performance.now();
 
   function draw() {
-    ctx.fillStyle = "#0d0f14";
+    ctx.fillStyle = "blue"; // arka plan mavi
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "#ff0303";
+    ctx.fillStyle = "red"; // kare kırmızı
     ctx.fillRect(x, y, size, size);
-
-    if (touching) {
-      ctx.strokeStyle = "white";
-      ctx.beginPath();
-      ctx.arc(targetX + size / 2, targetY + size / 2, 18, 0, Math.PI * 2);
-      ctx.stroke();
-    }
   }
 
   function update(dt) {
@@ -48,26 +41,37 @@
     requestAnimationFrame(loop);
   }
 
-  function setTargetFromTouch(touch) {
-    const rect = canvas.getBoundingClientRect();
-    targetX = touch.clientX - rect.left - size / 2;
-    targetY = touch.clientY - rect.top - size / 2;
+  function setTarget(px, py) {
+    targetX = px - size / 2;
+    targetY = py - size / 2;
   }
 
+  // Dokunma
   canvas.addEventListener("touchstart", (e) => {
     touching = true;
-    setTargetFromTouch(e.changedTouches[0]);
+    setTarget(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
     e.preventDefault();
   }, { passive: false });
 
   canvas.addEventListener("touchmove", (e) => {
     if (!touching) return;
-    setTargetFromTouch(e.changedTouches[0]);
+    setTarget(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
     e.preventDefault();
   }, { passive: false });
 
   canvas.addEventListener("touchend", () => { touching = false; });
   canvas.addEventListener("touchcancel", () => { touching = false; });
+
+  // Mouse desteği
+  canvas.addEventListener("mousedown", (e) => {
+    touching = true;
+    setTarget(e.clientX, e.clientY);
+  });
+  canvas.addEventListener("mousemove", (e) => {
+    if (!touching) return;
+    setTarget(e.clientX, e.clientY);
+  });
+  canvas.addEventListener("mouseup", () => { touching = false; });
 
   requestAnimationFrame(loop);
 })();
