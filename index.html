@@ -2,21 +2,26 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Pixel Spam Panel</title>
+  <title>Pixel Spam Test</title>
   <style>
-    body { margin:0; background:#000; }
-    iframe {
-      width: 100vw;
+    body {
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    #siteFrame {
+      width: 100%;
       height: 100vh;
       border: none;
     }
   </style>
 </head>
 <body>
-  <!-- Pixeland siteyi iframe içinde açıyoruz -->
-  <iframe id="pixelFrame" src="https://pixeland.fun/"></iframe>
+  <!-- Pixeland site iframe içinde -->
+  <iframe id="siteFrame" src="https://pixeland.fun"></iframe>
 
-  <!-- script.js dosyasını dahil ediyoruz -->
+  <!-- Panel ve spam kodu -->
   <script src="script.js"></script>
 </body>
 </html>
