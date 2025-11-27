@@ -1,252 +1,565 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Firebase compat CDN -->
+  <meta charset="UTF-8" />
+  <title>Hareketli Blok Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Firebase compat (no ESM, works in plain script) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <!-- Your Firebase config must define: const firebaseConfig = {...} -->
+
+  <!-- IMPORTANT: Put a config.js in the same folder with:
+       const firebaseConfig = { apiKey: "...", authDomain: "...", projectId: "...", ... };
+  -->
   <script src="config.js"></script>
+
   <style>
-    /* Minimal, clean, mobile-first */
+    /* Minimal, solid, mobile-first; focus on function not decoration */
     :root {
-      --bg: #101012;
-      --panel: #1a1b1e;
-      --muted: #c8c8cc;
-      --accent: #27c93f;
-      --border: #2a2b30;
+      --bg: #0f1115;
+      --panel: #171a21;
+      --muted: #c7c9d1;
+      --accent: #2ecc71;
+      --accent-2: #3a3f4b;
+      --text: #e9ecf1;
+      --border: #252a34;
+      --danger: #ff4d4f;
+      --warn: #f0ad4e;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: var(--bg); color: #fff; }
-    .auth {
-      max-width: 420px; margin: 40px auto; padding: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: var(--bg);
+      color: var(--text);
     }
-    .auth h1 { margin: 0 0 12px; font-size: 20px; }
-    .row { display: grid; gap: 8px; }
-    input {
-      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;
-      background: #121316; color: #fff; font-size: 15px;
-    }
-    .btn {
-      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--accent);
-      color: #0a0a0a; font-weight: 600; cursor: pointer;
-    }
-    .btn.secondary { background: #25262b; color: var(--muted); }
-    .hint { color: var(--muted); font-size: 13px; margin-top: 6px; }
 
-    /* Chat layout */
-    #chat { display: none; height: 100vh; }
+    /* Layout blocks */
+    .box {
+      max-width: 440px;
+      margin: 24px auto;
+      padding: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .box h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      color: var(--muted);
+    }
+    .row { display: grid; gap: 8px; }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    input {
+      background: #12141a;
+      color: var(--text);
+      outline: none;
+    }
+    button {
+      background: var(--accent);
+      color: #0a0b0d;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: var(--accent-2);
+      color: var(--muted);
+      font-weight: 600;
+    }
+    button.danger {
+      background: var(--danger);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Chat full screen */
+    #chat {
+      display: none;
+      height: 100vh;
+    }
     .chat-wrap {
-      display: grid; grid-template-columns: 220px 1fr; grid-template-rows: 1fr auto; height: 100%;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: 1fr auto;
+      height: 100%;
     }
     .users {
-      grid-row: 1 / span 2; border-right: 1px solid var(--border); background: var(--panel); padding: 10px; overflow-y: auto;
+      grid-row: 1 / span 2;
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+      padding: 12px;
+      overflow-y: auto;
     }
-    .users h2 { font-size: 14px; margin: 0 0 8px; color: var(--muted); }
-    .users .item { padding: 6px 8px; border-radius: 6px; background: #131417; margin-bottom: 6px; font-size: 14px; }
+    .users h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .users .item {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      background: #13161c;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .users .item .name { opacity: 0.95; }
+    .users .item .status {
+      font-size: 11px;
+      color: var(--muted);
+    }
 
     .messages {
-      background: #0f1013; padding: 10px; overflow-y: auto; border-bottom: 1px solid var(--border);
+      background: #0f1218;
+      padding: 12px;
+      overflow-y: auto;
+      border-bottom: 1px solid var(--border);
     }
-    .msg { padding: 8px; background: #16171b; border: 1px solid var(--border); border-radius: 8px; margin: 6px 0; font-size: 14px; }
-    .msg .u { color: var(--muted); margin-right: 6px; }
+    .msg {
+      padding: 10px;
+      background: #151923;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 6px 0;
+      font-size: 14px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .msg .user {
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .msg .text { word-wrap: break-word; }
+    .msg .time {
+      font-size: 11px;
+      color: var(--muted);
+    }
 
     .send {
-      display: grid; grid-template-columns: 1fr 120px; gap: 8px; padding: 10px; background: var(--panel);
+      display: grid;
+      grid-template-columns: 1fr 120px;
+      gap: 8px;
+      padding: 12px;
+      background: var(--panel);
       border-top: 1px solid var(--border);
     }
-    #msgInput { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: #121316; color: #fff; }
-    .send .btn { width: 100%; }
-
-    /* Admin panel (inline, minimal) */
-    #adminPanel {
-      display: none; max-width: 420px; margin: 16px auto 0; padding: 12px; background: var(--panel);
-      border: 1px solid var(--border); border-radius: 8px;
+    #msgInput {
+      background: #12141a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
     }
-    #adminPanel .grid { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+
+    /* Admin panel: hidden by default, shown only if logged user === 'admin' */
+    #adminPanel {
+      display: none;
+      max-width: 440px;
+      margin: 24px auto;
+      padding: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    #adminPanel .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    #adminPanel .row { margin-top: 8px; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1b202b;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      display: none;
+      z-index: 9999;
+    }
+
+    /* Responsive */
     @media (max-width: 760px) {
-      .chat-wrap { grid-template-columns: 1fr; }
+      .chat-wrap { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
       .users { display: none; }
     }
   </style>
 </head>
 <body>
 
-<!-- Auth (single form: login + direct register) -->
-<div class="auth" id="auth">
-  <h1>Hareketli Blok Chat</h1>
-  <div class="row">
-    <input id="username" placeholder="Kullanıcı adı">
-    <input id="password" type="password" placeholder="Şifre">
-    <button class="btn" onclick="login()">Giriş Yap</button>
-    <button class="btn secondary" onclick="register()">Kayıt Ol (direkt)</button>
-    <div class="hint">sitenin tüm hakları Türklerindir🦗</div>
-  </div>
-</div>
-
-<!-- Admin panel (shows only for 'admin') -->
-<div id="adminPanel">
-  <div class="row">
-    <button class="btn" onclick="clearMessages()">Tüm mesajları sil</button>
-    <div class="grid">
-      <input id="banUser" placeholder="Banlanacak kullanıcı adı">
-      <button class="btn secondary" onclick="ban()">Banla</button>
-    </div>
-    <button class="btn secondary" onclick="goChat()">Chat'e geç</button>
-  </div>
-</div>
-
-<!-- Chat -->
-<div id="chat">
-  <div class="chat-wrap">
-    <div class="users" id="users">
-      <h2>Çevrimiçi</h2>
-      <!-- Filled dynamically -->
-    </div>
-    <div class="messages" id="messages"></div>
-    <div class="send">
-      <input id="msgInput" placeholder="Mesaj yaz...">
-      <button class="btn" onclick="sendMessage()">Gönder</button>
+  <!-- Auth box (single form: login + direct register) -->
+  <div class="box" id="auth">
+    <h2>Hareketli Blok Chat</h2>
+    <div class="row">
+      <input id="username" placeholder="Kullanıcı adı" />
+      <input id="password" type="password" placeholder="Şifre" />
+      <button id="btnLogin">Giriş Yap</button>
+      <button class="secondary" id="btnRegister">Kayıt Ol (direkt)</button>
+      <div class="hint">Admin kullanıcı adı: admin — Admin paneli sadece admin'e görünür.</div>
     </div>
   </div>
-</div>
 
-<script>
-  // Init Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  <!-- Admin panel (hidden until admin logs in) -->
+  <div id="adminPanel">
+    <h2>Admin Panel</h2>
 
-  let currentUser = null;
-  let bannedUsers = [];
+    <!-- Clear all messages -->
+    <div class="row">
+      <button class="danger" id="btnClearMessages">Tüm Mesajları Sil</button>
+    </div>
 
-  // Single-form register: direct writes to users collection
-  async function register() {
-    const name = document.getElementById("username").value.trim();
-    const pass = document.getElementById("password").value;
-    if (!name || !pass) { alert("İsim ve şifre zorunlu."); return; }
-    try {
-      await db.collection("users").doc(name).set({ username: name, password: pass }, { merge: true });
-      alert("Kayıt başarılı. Şimdi giriş yapabilirsin.");
-    } catch (e) {
-      alert("Kayıt hatası: " + e.message);
+    <!-- Ban user -->
+    <div class="grid-2">
+      <input id="banUser" placeholder="Banlanacak kullanıcı adı" />
+      <button class="secondary" id="btnBan">Banla</button>
+    </div>
+
+    <!-- Go to chat as admin -->
+    <div class="row">
+      <button class="secondary" id="btnGoChat">Chat'e Geç</button>
+    </div>
+
+    <!-- Admin-only presence toggle (optional) -->
+    <div class="row">
+      <button class="secondary" id="btnAdminShowOnline">Çevrimiçi Kullanıcıları Göster</button>
+    </div>
+  </div>
+
+  <!-- Chat layout -->
+  <div id="chat">
+    <div class="chat-wrap">
+      <div class="users" id="users">
+        <h3>Çevrimiçi</h3>
+        <!-- Filled by presence listener -->
+      </div>
+
+      <div class="messages" id="messages">
+        <!-- Filled by messages listener -->
+      </div>
+
+      <div class="send">
+        <input id="msgInput" placeholder="Mesaj yaz..." />
+        <button id="btnSend">Gönder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <script>
+    /* Init Firebase */
+    if (typeof firebaseConfig === "undefined") {
+      alert("config.js eksik veya firebaseConfig tanımlı değil!");
     }
-  }
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  // Login by checking users collection
-  async function login() {
-    const name = document.getElementById("username").value.trim();
-    const pass = document.getElementById("password").value;
-    if (!name || !pass) { alert("İsim ve şifre zorunlu."); return; }
+    /* App state */
+    let currentUser = null;
+    let bannedUsers = []; // client-side ban list; for real security, ban in Firestore
+    let messagesUnsub = null;
+    let onlineUnsub = null;
+    let adminWatchingOnline = false;
 
-    try {
-      const doc = await db.collection("users").doc(name).get();
-      if (doc.exists && doc.data().password === pass) {
+    /* Elements */
+    const elAuth = document.getElementById("auth");
+    const elAdmin = document.getElementById("adminPanel");
+    const elChat = document.getElementById("chat");
+
+    const elUsername = document.getElementById("username");
+    const elPassword = document.getElementById("password");
+    const elBtnLogin = document.getElementById("btnLogin");
+    const elBtnRegister = document.getElementById("btnRegister");
+
+    const elBtnClear = document.getElementById("btnClearMessages");
+    const elBanUser = document.getElementById("banUser");
+    const elBtnBan = document.getElementById("btnBan");
+    const elBtnGoChat = document.getElementById("btnGoChat");
+    const elBtnAdminShowOnline = document.getElementById("btnAdminShowOnline");
+
+    const elUsers = document.getElementById("users");
+    const elMessages = document.getElementById("messages");
+
+    const elMsgInput = document.getElementById("msgInput");
+    const elBtnSend = document.getElementById("btnSend");
+
+    const elToast = document.getElementById("toast");
+
+    /* Utils */
+    function show(el) { el.style.display = ""; }
+    function hide(el) { el.style.display = "none"; }
+    function toast(text, ms = 2000) {
+      elToast.textContent = text;
+      elToast.style.display = "block";
+      setTimeout(() => { elToast.style.display = "none"; }, ms);
+    }
+    function fmtTime(t) {
+      try {
+        const d = new Date(t);
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        return hh + ":" + mm;
+      } catch { return ""; }
+    }
+
+    /* Auth: unique username registration */
+    async function register() {
+      const name = (elUsername.value || "").trim();
+      const pass = elPassword.value || "";
+      if (!name || !pass) return toast("İsim ve şifre zorunlu.", 2200);
+
+      if (name.length < 2) return toast("Kullanıcı adı çok kısa.", 2000);
+      if (pass.length < 3) return toast("Şifre çok kısa.", 2000);
+
+      try {
+        const doc = await db.collection("users").doc(name).get();
+        if (doc.exists) {
+          toast("Bu kullanıcı adı zaten alınmış.", 2200);
+          return;
+        }
+        await db.collection("users").doc(name).set({
+          username: name,
+          password: pass,
+          createdAt: Date.now(),
+          online: false,
+          lastSeen: Date.now()
+        });
+        toast("Kayıt başarılı. Şimdi giriş yapabilirsin.", 2200);
+      } catch (e) {
+        toast("Kayıt hatası: " + e.message, 2500);
+      }
+    }
+
+    /* Login: strict admin panel gating */
+    async function login() {
+      const name = (elUsername.value || "").trim();
+      const pass = elPassword.value || "";
+      if (!name || !pass) return toast("İsim ve şifre zorunlu.", 2200);
+
+      try {
+        const doc = await db.collection("users").doc(name).get();
+        if (!doc.exists) { toast("Kullanıcı bulunamadı.", 2200); return; }
+
+        const data = doc.data();
+        if (data.password !== pass) { toast("Şifre hatalı.", 2200); return; }
+
         currentUser = name;
-        document.getElementById("auth").style.display = "none";
+        hide(elAuth);
+
         if (name === "admin") {
-          document.getElementById("adminPanel").style.display = "block";
+          /* Only admin sees admin panel, chat stays hidden until admin proceeds */
+          show(elAdmin);
+          hide(elChat);
+          toast("Admin girişi başarılı.", 1800);
         } else {
+          /* Regular user goes directly to chat */
           startChat();
         }
-      } else {
-        alert("Hatalı giriş.");
+      } catch (e) {
+        toast("Giriş hatası: " + e.message, 2500);
       }
-    } catch (e) {
-      alert("Giriş hatası: " + e.message);
     }
-  }
 
-  function startChat() {
-    document.getElementById("adminPanel").style.display = "none";
-    document.getElementById("chat").style.display = "block";
-    ensureUserListed(currentUser);
-    listenMessages();
-    listenOnlineUsers();
-    setOnline(true);
-    window.addEventListener("beforeunload", () => setOnline(false));
-  }
+    /* Start chat session after login */
+    function startChat() {
+      /* Any admin panel lingering is hidden for non-admin */
+      hide(elAdmin);
+      show(elChat);
 
-  // Messages
-  async function sendMessage() {
-    if (!currentUser) return;
-    if (bannedUsers.includes(currentUser)) { alert("Banlandın."); return; }
-    const text = document.getElementById("msgInput").value.trim();
-    if (!text) return;
-    try {
-      await db.collection("messages").add({ user: currentUser, text, time: Date.now() });
-      document.getElementById("msgInput").value = "";
-    } catch (e) {
-      alert("Mesaj hatası: " + e.message);
+      /* Presence */
+      setOnline(true);
+      window.addEventListener("beforeunload", () => setOnline(false));
+
+      /* Listeners */
+      attachMessagesListener();
+      attachOnlineListener();
     }
-  }
 
-  function listenMessages() {
-    db.collection("messages").orderBy("time").onSnapshot(snap => {
-      const box = document.getElementById("messages");
-      box.innerHTML = "";
-      snap.forEach(doc => {
-        const d = doc.data();
-        const el = document.createElement("div");
-        el.className = "msg";
-        el.innerHTML = `<span class="u">${d.user}</span>${d.text}`;
-        box.appendChild(el);
-      });
-      box.scrollTop = box.scrollHeight;
+    /* Admin actions */
+    async function clearMessages() {
+      if (currentUser !== "admin") { toast("Yalnızca admin silebilir.", 2000); return; }
+      try {
+        const snap = await db.collection("messages").get();
+        const batch = db.batch();
+        snap.forEach(d => batch.delete(db.collection("messages").doc(d.id)));
+        await batch.commit();
+        toast("Mesajlar temizlendi.", 2000);
+      } catch (e) {
+        toast("Temizleme hatası: " + e.message, 2500);
+      }
+    }
+
+    function ban() {
+      if (currentUser !== "admin") { toast("Yalnızca admin banlayabilir.", 2000); return; }
+      const u = (elBanUser.value || "").trim();
+      if (!u) return;
+      if (!bannedUsers.includes(u)) bannedUsers.push(u);
+      toast(u + " banlandı.", 1800);
+      elBanUser.value = "";
+    }
+
+    function goChat() {
+      if (currentUser !== "admin") { toast("Yalnızca admin.", 2000); return; }
+      startChat();
+    }
+
+    /* Presence (simple flag in users document) */
+    async function setOnline(isOnline) {
+      if (!currentUser) return;
+      try {
+        await db.collection("users").doc(currentUser).set({
+          online: isOnline,
+          lastSeen: Date.now()
+        }, { merge: true });
+      } catch {}
+    }
+
+    /* Messages */
+    async function sendMessage() {
+      if (!currentUser) return toast("Önce giriş yap.", 1800);
+
+      if (bannedUsers.includes(currentUser)) {
+        toast("Banlandın, mesaj gönderemezsin.", 2200);
+        return;
+      }
+      const text = (elMsgInput.value || "").trim();
+      if (!text) return;
+
+      try {
+        await db.collection("messages").add({
+          user: currentUser,
+          text,
+          time: Date.now()
+        });
+        elMsgInput.value = "";
+      } catch (e) {
+        toast("Mesaj hatası: " + e.message, 2500);
+      }
+    }
+
+    function attachMessagesListener() {
+      if (messagesUnsub) messagesUnsub();
+
+      messagesUnsub = db.collection("messages")
+        .orderBy("time")
+        .onSnapshot(snap => {
+          elMessages.innerHTML = "";
+          snap.forEach(doc => {
+            const d = doc.data();
+            const row = document.createElement("div");
+            row.className = "msg";
+            const u = document.createElement("div");
+            u.className = "user";
+            u.textContent = d.user;
+            const t = document.createElement("div");
+            t.className = "text";
+            t.textContent = d.text;
+            const time = document.createElement("div");
+            time.className = "time";
+            time.textContent = fmtTime(d.time);
+
+            row.appendChild(u);
+            row.appendChild(t);
+            row.appendChild(time);
+            elMessages.appendChild(row);
+          });
+          elMessages.scrollTop = elMessages.scrollHeight;
+        });
+    }
+
+    function attachOnlineListener() {
+      if (onlineUnsub) onlineUnsub();
+      onlineUnsub = db.collection("users")
+        .where("online", "==", true)
+        .onSnapshot(snap => {
+          /* If admin explicitly wants to view online in panel, we keep both ways minimal */
+          elUsers.innerHTML = "<h3>Çevrimiçi</h3>";
+          snap.forEach(doc => {
+            const data = doc.data();
+            const name = data.username || doc.id;
+
+            const item = document.createElement("div");
+            item.className = "item";
+
+            const left = document.createElement("div");
+            left.className = "name";
+            left.textContent = name;
+
+            const right = document.createElement("div");
+            right.className = "status";
+            right.textContent = "online";
+
+            item.appendChild(left);
+            item.appendChild(right);
+            elUsers.appendChild(item);
+          });
+        });
+    }
+
+    /* Admin optional: just toggles a flag to keep UI minimal (online list is in chat anyway) */
+    function adminShowOnline() {
+      if (currentUser !== "admin") return toast("Yalnızca admin.", 1800);
+      adminWatchingOnline = !adminWatchingOnline;
+      toast(adminWatchingOnline ? "Admin: online kullanıcılar izleniyor." : "Admin: online izleme kapandı.", 1800);
+    }
+
+    /* Strict gating at startup: admin panel must NEVER show before login */
+    function resetUI() {
+      /* Initial state: show auth, hide admin, hide chat */
+      show(elAuth);
+      hide(elAdmin);
+      hide(elChat);
+    }
+
+    /* Wire buttons */
+    elBtnRegister.addEventListener("click", register);
+    elBtnLogin.addEventListener("click", login);
+    elBtnSend.addEventListener("click", sendMessage);
+
+    elBtnClear.addEventListener("click", clearMessages);
+    elBtnBan.addEventListener("click", ban);
+    elBtnGoChat.addEventListener("click", goChat);
+    elBtnAdminShowOnline.addEventListener("click", adminShowOnline);
+
+    /* Enter to submit */
+    elMsgInput.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") sendMessage();
     });
-  }
-
-  // Admin tools
-  async function clearMessages() {
-    try {
-      const snap = await db.collection("messages").get();
-      const batch = db.batch();
-      snap.forEach(d => batch.delete(db.collection("messages").doc(d.id)));
-      await batch.commit();
-      alert("Mesajlar temizlendi.");
-    } catch (e) {
-      alert("Temizleme hatası: " + e.message);
-    }
-  }
-
-  function ban() {
-    const u = document.getElementById("banUser").value.trim();
-    if (!u) return;
-    if (!bannedUsers.includes(u)) bannedUsers.push(u);
-    alert(u + " banlandı.");
-  }
-
-  function goChat() {
-    startChat();
-    ensureUserListed("admin");
-  }
-
-  // Online users (simple presence flag in users collection)
-  async function setOnline(isOnline) {
-    if (!currentUser) return;
-    try {
-      await db.collection("users").doc(currentUser).set({ online: isOnline, lastSeen: Date.now() }, { merge: true });
-    } catch {}
-  }
-
-  function listenOnlineUsers() {
-    db.collection("users").where("online", "==", true).onSnapshot(snap => {
-      const list = document.getElementById("users");
-      list.innerHTML = "<h2>Çevrimiçi</h2>";
-      snap.forEach(doc => {
-        const u = doc.data().username || doc.id;
-        const div = document.createElement("div");
-        div.className = "item";
-        div.textContent = u;
-        list.appendChild(div);
-      });
+    elPassword.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") login();
     });
-  }
+    elUsername.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") login();
+    });
 
-  function ensureUserListed(name) {
-    // No-op with presence; kept for compatibility
-  }
-</script>
+    /* On load, force initial gating */
+    resetUI();
+  </script>
 </body>
 </html>
