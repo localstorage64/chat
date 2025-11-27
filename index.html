@@ -1,27 +1,277 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Pixel Spam Test</title>
-  <style>
-    body {
-      margin: 0;
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
-    #siteFrame {
-      width: 100%;
-      height: 100vh;
-      border: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StorageChat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+html,body{height:100%;overflow:hidden;background:#4f9aff;color:#fff;}
+body::before{
+  content:"";position:fixed;top:0;left:0;width:100%;height:100%;
+  background: radial-gradient(2px 2px,#fff,#fff0) repeat;
+  background-size: 20px 20px;
+  animation:stars 60s linear infinite;
+  z-index:-1;
+}
+@keyframes stars{0%{background-position:0 0;}100%{background-position:-10000px 0;}}
+#loginPage{display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;}
+#loginPage input,#loginPage button{width:250px;margin:5px 0;padding:10px;border-radius:5px;border:none;}
+#chatPage{display:none;height:100vh;width:100%;flex-direction:row;}
+#sidebar{width:220px;background:#2572d9;padding:10px;overflow-y:auto;}
+#userList{list-style:none;padding:0;}
+#chatContainer{flex:1;display:flex;flex-direction:column;padding:10px;}
+#chatBox{flex:1;background:#4f9aff;border-radius:5px;overflow-y:auto;padding:10px;margin-bottom:10px;}
+.message{padding:8px;border-radius:10px;margin-bottom:5px;max-width:60%;word-wrap:break-word;position:relative;}
+.message.mine{background:#7289da;margin-left:auto;}
+.message.other{background:#99aab5;margin-right:auto;}
+.message.system{background:#ff9f1c;color:#000;text-align:center;font-weight:bold;}
+.message span{font-weight:bold;margin-right:5px;}
+.message-time{font-size:0.7em;color:#ccc;position:absolute;right:5px;bottom:2px;}
+.rainbow{background: linear-gradient(to right, red,orange,yellow,green,cyan,blue,violet);-webkit-background-clip:text;color:transparent;animation:rainbowAnim 3s linear infinite;}
+@keyframes rainbowAnim{0%{background-position:0%;}100%{background-position:100%;}}
+#adminPanel{display:none;background:#23272a;padding:15px;border-radius:10px;position:absolute;top:50px;left:50px;width:300px;cursor:move;box-shadow:0 0 20px rgba(0,0,0,0.5);}
+#adminPanel h3{margin-bottom:10px;text-align:center;}
+#adminPanel input,#adminPanel button{width:100%;margin:5px 0;padding:8px;border-radius:5px;border:none;}
+</style>
+<script src="config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
-  <!-- Pixeland site iframe içinde -->
-  <iframe id="siteFrame" src="https://pixeland.fun"></iframe>
+<div id="loginPage">
+  <h1>localStorageChat🦗</h1>
+  <input type="text" id="username" placeholder="isim">
+  <input type="password" id="password" placeholder="sifre">
+  <div>Captcha: <span id="captchaText" style="font-weight:bold;"></span></div>
+  <input type="number" id="captchaInput" placeholder="captcha sonucu">
+  <button id="loginBtn">hesaba gir</button>
+  <button id="registerBtn">hesap olustur</button>
+</div>
 
-  <!-- Panel ve spam kodu -->
-  <script src="script.js"></script>
+<div id="chatPage">
+  <div id="sidebar">
+    <h3>Aktif Kullanıcılar</h3>
+    <ul id="userList"></ul>
+    <button id="logoutBtn">Çıkış</button>
+    <button id="clearUsersBtn">Kullanıcı Listesini Temizle</button>
+  </div>
+  <div id="chatContainer">
+    <div id="chatBox"></div>
+    <input type="text" id="messageInput" placeholder="Mesaj yaz...">
+    <button id="sendBtn">Gönder</button>
+  </div>
+</div>
+
+<div id="adminPanel">
+  <h3>Admin Panel</h3>
+  <input type="text" id="targetUser" placeholder="Kullanıcı adı">
+  <input type="text" id="newPassword" placeholder="Yeni Şifre">
+  <button id="changePassBtn">Şifresini değiştir</button>
+  <button id="deleteAllBtn">Mesajları sil</button>
+  <button id="deleteTrollBtn">Küfürleri sil</button>
+</div>
+
+<script>
+window.onload = function(){
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  let currentUser=null;
+  let captcha1=0, captcha2=0;
+  let lastMsgTime=0;
+  const admins=["localStorage"];
+  const vipUsers=["yusufdu100","VIPUser2"];
+  const displayedMessages = new Set();
+
+  const forbiddenWords=["orospu","piç","siktir","amk","amına","amcık","göt","göt deliği","sik","sikiş","sikeyim","amına koyim","amına koyayım","sürtük","kahpe","mal","salak","aptal","yarak","oç","tecavüz","taciz","ananı","babanı","ibne","pezevenk","götveren","götüne koyayım","test","null","undefined","admin","moderator","mod","root","owner","bullet"];
+
+  function generateCaptcha(){
+    captcha1=Math.floor(Math.random()*10);
+    captcha2=Math.floor(Math.random()*10);
+    document.getElementById("captchaText").innerText=`${captcha1}+${captcha2}=?`;
+  }
+  generateCaptcha();
+
+  function isClean(text){
+    text=text.toLowerCase();
+    for(const w of forbiddenWords){
+      if(new RegExp("\\b"+w+"\\b","gi").test(text)) return false;
+    }
+    return true;
+  }
+
+  function canSend(){ const now=Date.now(); if(now-lastMsgTime<2000){ alert("⚠️ Çok hızlı mesaj!"); return false;} lastMsgTime=now; return true;}
+
+  document.getElementById("registerBtn").onclick=()=> {
+    const username=document.getElementById("username").value.trim();
+    const password=document.getElementById("password").value.trim();
+    const captchaInput=parseInt(document.getElementById("captchaInput").value);
+    if(!isClean(username)){ alert("Kullanıcı adı yasaklı"); return;}
+    if(captchaInput!==captcha1+captcha2){ alert("Captcha yanlış"); generateCaptcha(); return;}
+    auth.createUserWithEmailAndPassword(username+"@discordclone.com",password)
+    .then(u=>{currentUser=u.user; localStorage.setItem("dcUser", username); localStorage.setItem("dcPass", password); setOnline(); showChat();})
+    .catch(err=>alert(err.message));
+  };
+
+  document.getElementById("loginBtn").onclick=()=> {
+    const username=document.getElementById("username").value.trim();
+    const password=document.getElementById("password").value.trim();
+    const captchaInput=parseInt(document.getElementById("captchaInput").value);
+    if(captchaInput!==captcha1+captcha2){ alert("Captcha yanlış!"); generateCaptcha(); return;}
+    auth.signInWithEmailAndPassword(username+"@discordclone.com",password)
+    .then(u=>{currentUser=u.user; localStorage.setItem("dcUser", username); localStorage.setItem("dcPass", password); setOnline(); showChat();})
+    .catch(()=>alert("Hatalı kullanıcı veya şifre"));
+  };
+
+  function showChat(){
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("chatPage").style.display="flex";
+    loadMsgs(); loadUsers();
+    const userName=currentUser.email.split("@")[0];
+    if(admins.includes(userName)){ document.getElementById("adminPanel").style.display="block"; }
+  }
+
+  function sendMsg(){
+    const msg=document.getElementById("messageInput").value.trim();
+    if(!msg||!canSend()||!isClean(msg)){ alert("Mesaj uygunsuz"); return;}
+    const user=currentUser.email.split("@")[0];
+
+    if(msg.toLowerCase().startsWith("//bse ")){
+      const systemText = msg.slice(6);
+      db.ref("messages").push({user:"Sistem 🔹",message:systemText,timestamp:Date.now(),system:true});
+      document.getElementById("messageInput").value = "";
+      return;
+    }
+
+    db.ref("messages").push({user:user,message:msg,timestamp:Date.now()});
+    document.getElementById("messageInput").value="";
+  }
+  document.getElementById("sendBtn").onclick=sendMsg;
+  document.getElementById("messageInput").addEventListener("keypress",e=>{if(e.key==="Enter") sendMsg();});
+
+  function addMessageToDOM(data,msgId){
+    const chatBox=document.getElementById("chatBox");
+    if(displayedMessages.has(msgId)) return;
+    displayedMessages.add(msgId);
+    const div=document.createElement("div");
+    div.classList.add("message");
+    if(data.system) div.classList.add("system");
+    else div.classList.add(data.user===currentUser.email.split("@")[0]?"mine":"other");
+
+    const userSpan=document.createElement("span");
+    userSpan.textContent=data.user;
+
+    if(admins.includes(data.user)) userSpan.classList.add("rainbow");
+
+    if(vipUsers.includes(data.user)){
+      const vipSpan=document.createElement("span");
+      vipSpan.textContent=" 🏆";
+      vipSpan.style.color="orange";
+      userSpan.appendChild(vipSpan);
+      userSpan.style.color="orange";
+    }
+
+    div.appendChild(userSpan);
+
+    const messageText=document.createElement("span");
+    messageText.textContent=": "+data.message;
+    div.appendChild(messageText);
+
+    const timeDiv=document.createElement("div");
+    timeDiv.classList.add("message-time");
+    timeDiv.textContent=new Date(data.timestamp).toLocaleTimeString();
+    div.appendChild(timeDiv);
+
+    chatBox.appendChild(div);
+    chatBox.scrollTop=chatBox.scrollHeight;
+  }
+
+  function loadMsgs(){db.ref("messages").on("child_added",snap=>{ addMessageToDOM(snap.val(), snap.key); });}
+  function setOnline(){const user=currentUser.email.split("@")[0]; db.ref("onlineUsers/"+user).set({online:true}); db.ref("onlineUsers/"+user).onDisconnect().remove();}
+  function setOffline(){const user=currentUser.email.split("@")[0]; db.ref("onlineUsers/"+user).remove();}
+  function loadUsers(){
+    const userList=document.getElementById("userList");
+    db.ref("onlineUsers").on("value",snap=>{
+      userList.innerHTML="";
+      snap.forEach(u=>{
+        const li=document.createElement("li");
+        li.textContent=u.key;
+        li.style.color=admins.includes(u.key)?"gold":vipUsers.includes(u.key)?"orange":"white";
+        userList.appendChild(li);
+      });
+    });
+  }
+
+  // Admin panel
+  document.getElementById("changePassBtn").onclick=()=>{
+    const target=document.getElementById("targetUser").value.trim();
+    const newPass=document.getElementById("newPassword").value.trim();
+    if(!target||!newPass) return alert("Kullanıcı ve şifre gir!");
+    auth.signInWithEmailAndPassword(target+"@discordclone.com",newPass)
+      .then(()=>alert("Şifre değiştirildi!"))
+      .catch(()=>alert("Hata!"));
+  };
+  document.getElementById("deleteAllBtn").onclick=()=>{if(confirm("Tüm mesajları silmek istiyor musun?")){db.ref("messages").remove();document.getElementById("chatBox").innerHTML="";}};
+  document.getElementById("deleteTrollBtn").onclick=()=>{
+    if(confirm("Tacizci kullanıcıları silmek istiyor musun?")){
+      db.ref("onlineUsers").once("value",snap=>{
+        snap.forEach(u=>{
+          if(!isClean(u.key)) db.ref("onlineUsers/"+u.key).remove();
+        });
+      });
+    }
+  };
+  document.getElementById("clearUsersBtn").onclick=()=>{
+    if(confirm("Kullanıcı listesini temizlemek istiyor musun?")) db.ref("onlineUsers").remove();
+  };
+
+  // Sürüklenebilir admin panel
+  const admin=document.getElementById("adminPanel");
+  let isDragging=false,offsetX=0,offsetY=0;
+  admin.addEventListener("mousedown",e=>{isDragging=true; offsetX=e.offsetX; offsetY=e.offsetY;});
+  document.addEventListener("mouseup",()=>{isDragging=false;});
+  document.addEventListener("mousemove",e=>{if(isDragging){admin.style.left=(e.pageX-offsetX)+"px"; admin.style.top=(e.pageY-offsetY)+"px";}});
+
+  // ULTRA BOT KORUMA
+  (function() {
+    const userIPs = {};
+    function blockUser(user){ db.ref("onlineUsers/"+user).remove(); }
+    function detectBot(user){
+      const now=Date.now();
+      if(!userIPs[user]) userIPs[user]=[];
+      userIPs[user]=userIPs[user].filter(t=>now-t<5000); // 5 saniyede çoklu mesaj
+      userIPs[user].push(now);
+      if(userIPs[user].length>5) blockUser(user);
+    }
+    db.ref("messages").on("child_added",snap=>{
+      const data=snap.val();
+      if(!isClean(data.message)) blockUser(data.user);
+      detectBot(data.user);
+    });
+  })();
+
+  // ULTRA KOD ENGELLEME
+  (function() {
+    function blockAccess() { window.location.replace("about:blank"); }
+    function detectDevTools() {
+      const threshold = 160;
+      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+      if(widthThreshold || heightThreshold) blockAccess();
+    }
+    document.addEventListener("keydown", function(e) {
+      const key = e.key.toUpperCase();
+      if(key==="F12"||(e.ctrlKey && e.shiftKey && ["I","J","C"].includes(key))||(e.ctrlKey && key==="U")){ e.preventDefault(); blockAccess(); }
+    });
+    document.addEventListener("contextmenu", function(e){ e.preventDefault(); alert("⚠️ Sağ tık yasak!"); });
+    setInterval(detectDevTools,500);
+  })();
+
+};
+</script>
 </body>
 </html>
