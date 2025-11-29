@@ -1,6 +1,4 @@
-// admin-panel-enhance - script.js
-// Sayfaya admin paneli içeriğini ve butonlarını ekler (users / messages yönetimi).
-// Yapıştırıp siteye deploy et: index.html yüklenirken bu script çalışmalı.
+// admin-panel-enhance
 
 (async function(){
   // --- HELPERS ---
