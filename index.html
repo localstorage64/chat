@@ -3,13 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LumberTrade Chat</title>
+  <title>chat</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="app">
     <header>
-      <h1>LumberTrade Chat</h1>
       <div id="user-info">Bağlanılıyor...</div>
     </header>
 
@@ -17,10 +16,10 @@
       <h2 id="auth-title">Giriş Yap</h2>
       <form id="auth-form" autocomplete="off">
         <label>
-          <input id="username" type="text" maxlength="30" required placeholder="kullanıcı adı" />
+          <input id="username" type="text" maxlength="30" required placeholder="isim" />
         </label>
         <label>
-          <input id="password" type="password" minlength="4" maxlength="100" required placeholder="parola" />
+          <input id="password" type="password" minlength="4" maxlength="100" required placeholder="şifre" />
         </label>
 
         <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
@@ -30,7 +29,7 @@
         </div>
 
         <div style="margin-top:12px;display:flex;gap:8px;">
-          <button id="auth-submit" type="submit">Giriş Yap</button>
+          <button id="auth-submit" type="submit">giriş yap</button>
           <button type="button" id="auth-toggle">Hesap Oluştur</button>
         </div>
 
@@ -47,7 +46,7 @@
       </form>
 
       <div style="margin-top:8px;display:flex;gap:8px;">
-        <button id="logout">Çıkış</button>
+        <button id="logout">Çıkış Yap</button>
       </div>
     </main>
 
