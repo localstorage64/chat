@@ -23,7 +23,7 @@
         </label>
 
         <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-          <div id="captcha" style="font-weight:700;background:#f0f0f0;padding:8px;border-radius:6px;">?</div>
+          <div id="captcha" style="font-weight:700;background:transparent;padding:8px;border-radius:6px;">?</div>
           <input id="captcha-input" placeholder="cevap" maxlength="2" style="padding:8px;border-radius:6px;border:1px solid #ccc;" />
           <button type="button" id="captcha-refresh">Yenile</button>
         </div>
@@ -38,7 +38,7 @@
     </section>
 
     <main id="chat" hidden>
-      <div id="messages" style="height:50vh;overflow:auto;border:1px solid #eee;padding:10px;border-radius:6px;background:#fff"></div>
+      <div id="messages" style="height:50vh;overflow:auto;border:1px solid #eee;padding:10px;border-radius:6px;background:transparent"></div>
 
       <form id="msg-form" style="margin-top:10px;display:flex;gap:8px;">
         <input id="msg-input" placeholder="Mesaj yaz..." maxlength="1000" style="flex:1;padding:10px;border-radius:6px;border:1px solid #ccc" />
@@ -51,7 +51,7 @@
     </main>
 
     <!-- admin panel -->
-    <div id="admin" hidden style="position:fixed;right:16px;bottom:16px;width:320px;border:1px solid #ddd;background:#fff;padding:8px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.08);">
+    <div id="admin" hidden style="position:fixed;right:16px;bottom:16px;width:320px;border:1px solid #ddd;background:transparent;padding:8px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.08);">
       <div id="admin-handle" style="cursor:grab;font-weight:700;margin-bottom:6px;">Admin Kontrol <button id="admin-close" style="float:right">Kapat</button></div>
       <div style="max-height:40vh;overflow:auto">
         <h4>Mesajlar</h4>
@@ -72,5 +72,6 @@
 
   <script type="module" src="./script.js"></script>
   <script src="admin.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
