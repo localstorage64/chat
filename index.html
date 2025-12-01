@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>chat</title>
+  <title>NexusChat</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -30,7 +30,9 @@
 
         <div style="margin-top:12px;display:flex;gap:8px;">
           <button id="auth-submit" type="submit">giriş yap</button>
-          <button type="button" id="auth-toggle">Hesap Oluştur</button>
+          <button type="button" id="auth-toggle" onclick="
+           this.textContent = this.textContent === 'Hesabım var' ? 'Hesabım yok' : 'Hesabım var';
+           ">Hesabım yok</button>
         </div>
 
         <div id="auth-msg" style="color:#b91c1c;margin-top:8px"></div>
@@ -73,5 +75,6 @@
   <script type="module" src="./script.js"></script>
   <script src="admin.js"></script>
   <script src="main.js"></script>
+  <h4 id="auth-title">© 2025 NexusChat — Chat sitesi</h4>
 </body>
 </html>
