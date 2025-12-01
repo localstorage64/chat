@@ -16,8 +16,8 @@ button {
   -webkit-appearance: none;
 }
 
-h2 {
-  color: white;
+h2,h4 {
+  color: gray;
 }
 
 div {
@@ -25,6 +25,7 @@ div {
 }
 
 captcha {
+  color:red
 }
 
 input {
