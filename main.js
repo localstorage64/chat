@@ -1,4 +1,3 @@
-//main.js [İrfan,İbrahim,Eymen]
 document.addEventListener('DOMContentLoaded', function() {
     createFloatingParticles();
 
@@ -116,4 +115,3 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style)})
-
