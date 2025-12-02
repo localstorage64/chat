@@ -1,5 +1,4 @@
-
-
+/* günaydın? */
 button {
   background-color: transparent !important;
   color: gray !important;
@@ -10,19 +9,15 @@ button {
   appearance: none;
   webkit-appearance: none;
 }
-
 h2,h4 {
   color: gray;
 }
-
 div {
   color: white;
 }
-
 captcha {
   color:red
 }
-
 input {
   background-color: transparent;
   color: white;
@@ -31,23 +26,19 @@ input {
   border-radius: 5px;
   cursor: pointer;
 }
-
 a {
   color: red;
   text-decoration: none;
 }
-
 a:hover {
   text-decoration: underline;
 }
-
 body {
   margin: 0;
   padding: 10px;
   font-family: sans-serif;
   background-color: black;
 }
-
 a {
   display: block;
   margin-top: 10px;
@@ -55,11 +46,9 @@ a {
   text-decoration: none;
   font-size: 16px;
 }
-
 a:hover {
   text-decoration: underline;
 }
-
 admin {
   background-color: transparent;
   color: gray;
@@ -70,12 +59,10 @@ admin {
   appearance: none;
   -webkit-appearance: none;
 }
-
   appearance: none !important;
   -webkit-appearance: none !important;
   box-shadow: none !important;          /* Varsayılan gölgeyi kaldır */
 }
-
 button {
   background-color: white;
   color: black;
@@ -83,13 +70,14 @@ button {
   padding: 10px 20px;
   cursor: pointer;
 }
-
 @keyframes clickEffect {
   0%   { background-color: #d9d9d9; }
   100% { background-color: white; }
 }
-
 button:focus {
   animation: clickEffect 1s;
   outline: none;
+}
+this.textContent {
+  color: gray
 }
