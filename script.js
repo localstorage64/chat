@@ -90,7 +90,6 @@ async function createUser(name, pw){
 
 async function signInUser(name, pw){
   const uname = sanitize(name);
-  if (!validUsername(uname)) throw new Error("Kullanıcı adı geçersiz");
   const rec = await getUser(uname);
   if (!rec) throw new Error("Kullanıcı bulunamadı");
   if (rec.banned) throw new Error("Kullanıcı yasaklı");
