@@ -1,6 +1,6 @@
 /* günaydın? */
 
-#btnSiyah, #btnLacivert {
+#btnSiyah, #btnLacivert, #btnTest1, #btnTest2 {
   padding: 8px 12px;
   width: 120px;
 }
@@ -8,7 +8,7 @@
 
 button {
   background-color: transparent !important;
-  color: gray !important;
+  color: #a7a7a8 !important;
   border: 1px solid #ccc;
   padding: 10px 20px;
   border-radius: 5px;
@@ -17,24 +17,23 @@ button {
   webkit-appearance: none;
 }
 h2,h4 {
-  color: gray;
+  color: #a7a7a8;
 }
 div {
-  color: white;
+  color: #a7a7a8;
 }
 captcha {
-  color:red
+  color: ;
 }
 input {
   background-color: transparent;
-  color: white;
+  color: #a7a7a8;
   border: 1px solid #ccc;
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
 }
 a {
-  color: red;
   text-decoration: none;
 }
 a:hover {
@@ -58,7 +57,7 @@ a:hover {
 }
 admin {
   background-color: transparent;
-  color: gray;
+  color: #a7a7a8;
   border: 1px solid #ccc;
   padding: 10px 20px;
   border-radius: 5px;
@@ -86,7 +85,7 @@ button:focus {
   outline: none;
 }
 this.textContent {
-  color: gray
+  color: #a7a7a8
 }
 
 /* Ayarlar ksıımı tasarımı */
