@@ -6,7 +6,7 @@
   <title>ChatWorld</title>
 </head>
 <body>
-  <!-- burasıda index.html iştee -->
+  <!-- burasıda index.html işte -->
     <div id="app">
     <header>
       <div id="user-info">Bağlanılıyor...</div>
@@ -45,6 +45,9 @@
   <p>Arka plan rengi</p>
   <button id="btnSiyah">Siyah</button>
   <button id="btnLacivert">Lacivert</button>
+  <button id="btnTest1">Test</button>
+  <button id="btnTest2">Test</button>
+  
 </div>
 
 <script>
@@ -75,6 +78,18 @@
   document.getElementById("btnLacivert").onclick = () => {
     document.body.style.backgroundColor = "#0A0A23";
     localStorage.setItem("selectedColor", "#0A0A23");
+  };
+      
+  // Test 1
+  document.getElementById("btnTest1").onclick = () => {
+    document.body.style.backgroundColor = "TEST";
+    localStorage.setItem("selectedColor", "TEST");
+  };
+      
+  // Test 1
+  document.getElementById("btnTest2").onclick = () => {
+    document.body.style.backgroundColor = "TEST";
+    localStorage.setItem("selectedColor", "TEST");
   };
 </script>
       <div id="messages" style="height:50vh;overflow:auto;border:1px solid #eee;padding:10px;border-radius:6px;background:transparent"></div>
