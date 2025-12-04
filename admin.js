@@ -1,4 +1,4 @@
-//İBRAAAAAHAAAAAM
+//TURKİYEEEEEEEEEEEEEEE
 
 (async function(){
   // --- HELPERS ---
@@ -13,7 +13,7 @@
       }
       if (window.firebaseConfig && firebaseConfig.databaseURL) return firebaseConfig.databaseURL.replace(/\/$/,'');
     } catch(e){}
-    // fallback (uygun değilse burayı projenize göre değiştirin)
+    // fallback😕👏
     return 'https://localstorage-f4705-default-rtdb.firebaseio.com';
   }
 
@@ -37,8 +37,8 @@
 
   function q(path){
     const base = DB_URL.replace(/\/$/,'');
-    const encoded = encodeURIComponent(path).replace(/%2F/g, '/'); // keep slashes readable
-    // we will construct url manually to avoid double-encoding keys
+    const encoded = encodeURIComponent(path).replace(/%2F/g, '/'); // WORK WORK WORK
+    // sünet dügünü
     return `${base}/${path}.json${token ? '?auth=' + encodeURIComponent(token) : ''}`;
   }
 
@@ -51,12 +51,11 @@
     return r.json();
   }
 
-  // --- DOM hazırlığı ---
+  // Dom onemli aga
   let admin = document.getElementById('admin');
   if (!admin){
     admin = document.createElement('div');
     admin.id = 'admin';
-    // hafif stil, index.html'deki konuma ekle (sağa alt köşe gibi)
     admin.style.position = 'fixed';
     admin.style.right = '12px';
     admin.style.bottom = '12px';
@@ -69,7 +68,7 @@
     admin.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)';
     document.body.appendChild(admin);
   }
-  admin.innerHTML = ''; // temizle
+  admin.innerHTML = '';
 
   const header = document.createElement('div');
   header.id = 'admin-handle';
@@ -103,7 +102,7 @@
   msgsEl.id = 'admin-messages';
   admin.appendChild(msgsEl);
 
-  // buton oluşturucu
+  // butonda önemli aga
   function makeBtn(text, opts = {}){
     const b = document.createElement('button');
     b.textContent = text;
@@ -116,7 +115,7 @@
     return b;
   }
 
-  // --- Veri yükleme / işlemler ---
+  // --- Veri yükleme Ğ
   async function loadUsers(){
     usersEl.querySelectorAll('.user-item')?.forEach(n=>n.remove());
     try {
@@ -180,7 +179,6 @@
   async function loadMessages(){
     msgsEl.querySelectorAll('.msg-item')?.forEach(n=>n.remove());
     try {
-      // orderBy paramını url içinde doğru encode et
       const data = await fetchJson(`${DB_URL}/messages.json${token ? '?auth=' + encodeURIComponent(token) : ''}&orderBy=%22createdAt%22&limitToLast=200`);
       if (!data || Object.keys(data).length === 0){
         const note = document.createElement('div'); note.className='msg-item'; note.textContent='Mesaj yok'; msgsEl.appendChild(note); return;
@@ -239,9 +237,8 @@
   clearAllBtn.addEventListener('click', clearAllMessages);
   
   //sürüklenebilir panel [test]
-  //boş?
+  //10 yıl sonra eklicem
   
-  // initial load
   await loadUsers();
   await loadMessages();
 
