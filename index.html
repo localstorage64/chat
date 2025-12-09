@@ -47,9 +47,37 @@
   <button id="btnSiyah">Siyah</button>
   <button id="btnLacivert">Lacivert</button>
   <button id="btnTest1">Test</button>
-  <a href="https://files.catbox.moe/gh2wtr.mp4">
-  <button id="supeli">🤨🧐</button>
-  </a>
+  <input id="bgFile" type="file" accept="image/*">
+<button id="clearBtn">Arka Planı Sil</button>
+
+<script>
+const LS_KEY = "bgImageDataURL";
+
+// Sayfa açılışında kaydı uygula
+const saved = localStorage.getItem(LS_KEY);
+if (saved) {
+  document.body.style.backgroundImage = `url("${saved}")`;
+}
+
+// Dosya seçildiğinde kaydet
+document.getElementById("bgFile").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const dataURL = reader.result;
+    document.body.style.backgroundImage = `url("${dataURL}")`;
+    localStorage.setItem(LS_KEY, dataURL);
+  };
+  reader.readAsDataURL(file);
+});
+
+// Silme butonu
+document.getElementById("clearBtn").addEventListener("click", () => {
+  localStorage.removeItem(LS_KEY);
+  document.body.style.backgroundImage = "";
+});
+</script>
 
 </div>
 
